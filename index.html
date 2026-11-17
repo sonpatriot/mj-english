@@ -141,12 +141,12 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 .side .result{margin:0;min-height:0;font-size:17px}.side .stars{font-size:32px}.side .score{font-size:22px}.side .heard{font-size:14px;line-height:1.3}
 .side .microw .ox{display:grid;grid-template-columns:1fr 1fr;gap:8px}.side .microw .ox button{min-width:0;font-size:17px;min-height:52px}
 .score{font-size:30px}
-.tf{display:grid;gap:clamp(24px,5vh,52px);width:100%;text-align:center}
-.tftitle{font-size:clamp(28px,4.5vh,44px);color:var(--coral)}
-.formula{font-size:clamp(46px,min(7vw,11vh),110px);line-height:1.1;white-space:nowrap}
+.tf{display:grid;gap:.9em;width:100%;text-align:center;font-size:40px}
+.tftitle{font-size:1em;color:var(--coral)}
+.formula{font-size:2.3em;line-height:1.1;white-space:nowrap}
 .formula .plus{color:#9AA8BC;font-size:.7em}.tail{color:#FF6B6B}.formula .tail{display:inline-block;line-height:1;background:#FFF0D6;border-radius:12px;padding:.02em .1em .1em}
 .formula s.gone{color:#C3CCD8;text-decoration-thickness:4px}
-.tfex{font-size:clamp(20px,min(2.5vw,4.2vh),32px);line-height:1.5;margin-top:clamp(10px,2vh,20px)}.tfex small{font-size:.85em;color:var(--muted)}
+.tfex{font-size:1em;line-height:1.45;margin-top:.3em}.tfex .tnote{color:#5D6B82}
 .sent u.tl{text-decoration:none;color:#FF6B6B}
 .fs{position:fixed;right:14px;bottom:14px;z-index:40;min-height:48px;font-size:16px;opacity:.85}
 @media(max-width:600px){.hero{grid-template-columns:1fr}.hero svg{width:120px;height:auto}.ox button{min-width:140px;font-size:24px}.mjbar svg{width:90px;height:auto}
@@ -161,7 +161,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
-const APP_VER='2026.11.17-12';
+const APP_VER='2026.11.17-13';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
@@ -496,23 +496,32 @@ function tfFormula(x){
   const left=x.kind==='ing-e'?`${esc(x.base.slice(0,-1))}<s class="gone">e</s>`:x.kind==='ies'?`${esc(x.base.slice(0,-1))}<s class="gone">y</s>`:esc(x.base);
   return `<span>${left}</span> <span class="plus">+</span> <span class="tail">${esc(x.kind==='ing-double'?x.base.slice(-1)+'ing':tail)}</span> <span class="plus">→</span> <span>${esc(keep)}<span class="tail">${esc(tail)}</span></span>`;
 }
+const EMO={sun:'☀️',shine:'✨',snow:'❄️',melt:'💧',bird:'🐦',sing:'🎵',flower:'🌸',bud:'🌱',wind:'🌬️',blow:'💨',chick:'🐥',peep:'🐣',spring:'🌷',paper:'📄',scissors:'✂️',ribbon:'🎀',glue:'🧴',sticker:'⭐',crayon:'🖍️',birthday:'🎂',card:'💌',bubble:'🫧',beach:'🏖️',bath:'🛁',sink:'🚰',drink:'🥤',clothes:'👕',dog:'🐶',cat:'🐱',apple:'🍎',ball:'⚽',car:'🚗',book:'📘',run:'🏃',jump:'🤸',swim:'🏊',eat:'😋',play:'🎈',read:'📖'};
 function tfText(x){
-  const m=x.w.meaning.split(',')[0].trim(),stem=m.replace(/다$/,''),B=`<b class="en">${esc(x.base)}</b>`,F=`<b class="en">${esc(x.form)}</b>`;
+  const m=x.w.meaning.split(',')[0].trim(),stem=m.replace(/다$/,''),B=`<b class="en">${esc(x.base)}</b>`,F=`<b class="en">${esc(x.form)}</b>`,E=x.w.emoji||EMO[x.base]||(x.verb?'🌟':'🎁');
   if(x.kind.startsWith('ing')){
-    let t=`${B}(${esc(m)}) 꼬리에 <b class="tail">ing</b>를 붙이면 ${F}!<br><b>"지금 ${esc(stem)}고 있어요"</b>로 변신! 그림 속에서 지금 하고 있는 일을 말할 때 써요.`;
-    if(x.kind==='ing-e')t+=`<br><small>끝에 있던 <b>e</b>는 ing가 오면 쏙 숨어 버려요.</small>`;
-    if(x.kind==='ing-double')t+=`<br><small>짧은 단어는 마지막 글자 <b>${esc(x.base.slice(-1))}</b>가 쌍둥이처럼 하나 더 생겨요.</small>`;
+    let t=`${E} ${B}(${esc(m)}) + <b class="tail">ing</b> = ${F}<br>⏰ <b>"지금 ${esc(stem)}고 있어요!"</b>`;
+    if(x.kind==='ing-e')t+=`<br><span class="tnote">🙈 끝의 <b>e</b>는 ing가 오면 쏙 숨어요!</span>`;
+    if(x.kind==='ing-double')t+=`<br><span class="tnote">👯 마지막 글자 <b>${esc(x.base.slice(-1))}</b>가 쌍둥이처럼 하나 더!</span>`;
     return t}
-  if(x.kind==='ed')return `${B}에 <b class="tail">ed</b> 꼬리가 붙으면 ${F}! <b>"벌써 ${esc(stem)}었어요/했어요"</b>처럼 이미 지나간 일이 돼요.`;
-  if(x.verb)return `${B}에 <b class="tail">${x.kind==='es'?'es':'s'}</b> 꼬리가 붙어서 ${F}! 그 사람이나 그것 <b>하나</b>가 할 때는 동사에도 꼬리를 붙여 줘요.`;
+  if(x.kind==='ed')return `⏪ ${B} + <b class="tail">ed</b> = ${F}<br><b>"벌써 ${esc(stem)}었어요/했어요!"</b> 지나간 일이에요`;
+  if(x.verb)return `🙋 ${B} + <b class="tail">${x.kind==='es'?'es':'s'}</b> = ${F}<br>한 명이 할 때 붙는 꼬리예요!`;
   const tail=x.kind==='es'?'es':x.kind==='ies'?'ies':'s';
-  return `${B} = ${esc(m)} <b>하나</b>. 둘, 셋… <b>여러 개</b>가 되면 꼬리에 <b class="tail">${tail}</b>를 달아서 ${F}!<br>영어는 여러 개일 때 꼭 꼬리를 달아 줘요.${x.kind==='ies'?'<br><small>끝의 y는 i로 바뀌고 es가 붙어요.</small>':''}`;
+  return `${E} ${B} = ${esc(m)} <b>하나</b><br>${E}${E}${E} <b>여러 개</b>면 꼬리에 <b class="tail">${tail}</b>! → ${F}${x.kind==='ies'?'<br><span class="tnote">🔄 끝의 y는 i로 바뀌어요!</span>':''}`;
 }
+/* 변신 화면 글자를 카드 안에서 가능한 한 크게 */
+function fitTf(){
+  const tf=document.querySelector('.tf'),card=tf&&tf.closest('.card');if(!tf)return;
+  let fs=Math.min(46,Math.max(24,window.innerHeight*0.06));tf.style.fontSize=fs+'px';
+  const over=()=>tf.scrollHeight>card.clientHeight-36||[...tf.querySelectorAll('.formula')].some(f=>f.scrollWidth>tf.clientWidth+2);
+  while(fs>18&&over()){fs-=1;tf.style.fontSize=fs+'px'}
+}
+window.addEventListener('resize',()=>{if(document.querySelector('.tf'))fitTf()});
 function tipStep(tf){
   stopAll();const {st}=cur();const r=ses.res[ses.i];
   const ing=tf.some(x=>x.kind.startsWith('ing')),pl=tf.some(x=>!x.verb&&!x.kind.startsWith('ing'));
   app.innerHTML=header()+`<div class="stage"><div class="card focus"><div class="tf">
-   <div class="tftitle">단어가 변신했어요!</div>
+   <div class="tftitle">✨ 단어가 변신했어요! ✨</div>
    ${tf.map(x=>`<div class="tfrow"><div class="formula en">${tfFormula(x)}</div><div class="tfex">${tfText(x)}</div></div>`).join('')}
   </div></div><aside class="side"><div class="ctrl">
    <button class="b-yellow" id="tfhear">변신 소리 듣기</button>
@@ -520,6 +529,7 @@ function tipStep(tf){
    <button class="b-white" id="back2">← 문장으로</button>
   </div>${say('wow',ing&&pl?'방금 문장에서 단어들이 꼬리를 달고 변신했어!':ing?'방금 문장에서 단어가 <b>ing</b> 꼬리를 달고 변신했어!':'방금 문장에서 여러 개라서 꼬리가 생겼어!')}</aside></div>`;
   bindQuit();
+  fitTf();
   $('#tfhear').onclick=()=>speak(tf.map(x=>x.base+'. '+x.form+'.').join(' '),0.75);
   $('#tfgo').onclick=()=>{r.tipSeen=true;nextStep()};
   $('#back2').onclick=()=>{r.tipSeen=true;sentStep()};
