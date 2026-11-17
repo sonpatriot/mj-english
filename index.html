@@ -154,7 +154,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
-const APP_VER='2026.11.17-7';
+const APP_VER='2026.11.17-8';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
@@ -183,33 +183,34 @@ const josa=n=>{const c=n.charCodeAt(n.length-1);return (c>=0xAC00&&c<=0xD7A3&&(c
 
 /* ---------- MJ선생님 ---------- */
 function mj(mood='happy',w=150){
-  const eyes={happy:'<path d="M70 98q8-9 16 0M114 98q8-9 16 0" stroke="#3a2a22" stroke-width="5" fill="none" stroke-linecap="round"/>',
-    wow:'<circle cx="78" cy="98" r="7" fill="#3a2a22"/><circle cx="122" cy="98" r="7" fill="#3a2a22"/><circle cx="80" cy="95" r="2.5" fill="#fff"/><circle cx="124" cy="95" r="2.5" fill="#fff"/>',
-    think:'<circle cx="78" cy="99" r="6" fill="#3a2a22"/><circle cx="122" cy="99" r="6" fill="#3a2a22"/><path d="M66 82l20-4M112 78l20 4" stroke="#5B3A29" stroke-width="4" stroke-linecap="round"/>',
-    cheer:'<path d="M70 100q8-10 16 0M114 100q8-10 16 0" stroke="#3a2a22" stroke-width="5" fill="none" stroke-linecap="round"/>',
-    hug:'<path d="M70 98q8 7 16 0M114 98q8 7 16 0" stroke="#3a2a22" stroke-width="5" fill="none" stroke-linecap="round"/>'}[mood];
-  const mouth={happy:'<path d="M86 124q14 14 28 0" stroke="#c0392b" stroke-width="5" fill="#ff8a80" stroke-linecap="round"/>',
-    wow:'<ellipse cx="100" cy="128" rx="9" ry="11" fill="#c0392b"/>',
-    think:'<path d="M90 128h18" stroke="#c0392b" stroke-width="5" stroke-linecap="round"/>',
-    cheer:'<path d="M82 120q18 26 36 0z" fill="#c0392b"/><path d="M90 128q10 8 20 0" fill="#ff8a80"/>',
-    hug:'<path d="M88 124q12 10 24 0" stroke="#c0392b" stroke-width="5" fill="none" stroke-linecap="round"/>'}[mood];
+  const eyes={happy:'<path d="M74 95q8-8 16 0M110 95q8-8 16 0" stroke="#3a2a22" stroke-width="4.5" fill="none" stroke-linecap="round"/>',
+    wow:'<circle cx="82" cy="95" r="6" fill="#3a2a22"/><circle cx="118" cy="95" r="6" fill="#3a2a22"/><circle cx="84" cy="93" r="2" fill="#fff"/><circle cx="120" cy="93" r="2" fill="#fff"/>',
+    think:'<circle cx="82" cy="96" r="5" fill="#3a2a22"/><circle cx="118" cy="96" r="5" fill="#3a2a22"/><path d="M72 79l17-3M111 76l17 3" stroke="#5B3A29" stroke-width="3.5" stroke-linecap="round"/>',
+    cheer:'<path d="M74 97q8-9 16 0M110 97q8-9 16 0" stroke="#3a2a22" stroke-width="4.5" fill="none" stroke-linecap="round"/>',
+    hug:'<path d="M74 94q8 6 16 0M110 94q8 6 16 0" stroke="#3a2a22" stroke-width="4.5" fill="none" stroke-linecap="round"/>'}[mood];
+  const mouth={happy:'<path d="M90 117q10 11 20 0" stroke="#c0392b" stroke-width="4" fill="#ff8a80" stroke-linecap="round"/>',
+    wow:'<ellipse cx="100" cy="121" rx="6.5" ry="8.5" fill="#c0392b"/>',
+    think:'<path d="M93 121h14" stroke="#c0392b" stroke-width="4" stroke-linecap="round"/>',
+    cheer:'<path d="M87 114q13 20 26 0z" fill="#c0392b"/><path d="M93 121q7 5 14 0" fill="#ff8a80"/>',
+    hug:'<path d="M91 117q9 8 18 0" stroke="#c0392b" stroke-width="4" fill="none" stroke-linecap="round"/>'}[mood];
   const up=mood==='cheer'||mood==='wow';
-  const arms=up?'<path d="M58 178q-30-30-26-64" stroke="#FF8FA3" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="32" cy="110" r="11" fill="#FFE0C7"/><path d="M142 178q30-30 26-64" stroke="#FF8FA3" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="168" cy="110" r="11" fill="#FFE0C7"/>'
-   :'<path d="M60 176q-16 22-10 46" stroke="#FF8FA3" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="51" cy="226" r="10" fill="#FFE0C7"/><path d="M140 176q22 12 30 32" stroke="#FF8FA3" stroke-width="18" fill="none" stroke-linecap="round"/><rect x="160" y="200" width="30" height="24" rx="4" fill="#3D8BFF" transform="rotate(-12 175 212)"/><text x="175" y="217" font-size="13" fill="#fff" text-anchor="middle" font-family="Andika,Arial" transform="rotate(-12 175 212)">ABC</text>';
+  const arms=up?'<path d="M60 178q-28-30-24-66" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><circle cx="36" cy="108" r="10" fill="#FFE0C7"/><path d="M140 178q28-30 24-66" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><circle cx="164" cy="108" r="10" fill="#FFE0C7"/>'
+   :'<path d="M62 178q-16 22-10 46" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><circle cx="53" cy="227" r="9.5" fill="#FFE0C7"/><path d="M138 178q22 12 30 32" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><rect x="158" y="200" width="30" height="24" rx="4" fill="#3D8BFF" transform="rotate(-12 173 212)"/><text x="173" y="217" font-size="13" fill="#fff" text-anchor="middle" font-family="Andika,Arial" transform="rotate(-12 173 212)">ABC</text>';
   return `<svg width="${w}" height="${w*1.2}" viewBox="0 0 200 240" role="img" aria-label="MJ선생님">
-  <ellipse cx="100" cy="236" rx="60" ry="5" fill="rgba(30,80,140,.15)"/>
-  <path d="M30 100q0-78 70-78t70 78v44q-10 8-22 4V96H52v52q-12 4-22-4z" fill="#5B3A29"/>
-  <path d="M56 168q44-20 88 0l10 70H46z" fill="#FF8FA3"/>
-  <path d="M86 166l14 22 14-22z" fill="#fff"/>
-  <rect x="112" y="196" width="30" height="20" rx="6" fill="#fff"/><text x="127" y="211" font-size="13" text-anchor="middle" fill="#FF5A7A" font-family="Andika,Arial" font-weight="700">MJ</text>
+  <ellipse cx="100" cy="236" rx="56" ry="5" fill="rgba(30,80,140,.15)"/>
+  <path d="M46 98Q44 34 100 33Q156 34 154 98V142Q146 148 136 144V100H64V144Q54 148 46 142Z" fill="#5B3A29"/>
+  <rect x="92" y="140" width="16" height="22" rx="6" fill="#F7CFB2"/>
+  <path d="M58 170q42-18 84 0l10 68H48z" fill="#FF8FA3"/>
+  <path d="M88 166l12 20 12-20z" fill="#fff"/>
+  <rect x="110" y="196" width="30" height="20" rx="6" fill="#fff"/><text x="125" y="211" font-size="13" text-anchor="middle" fill="#FF5A7A" font-family="Andika,Arial" font-weight="700">MJ</text>
   ${arms}
-  <circle cx="100" cy="102" r="60" fill="#FFE0C7"/>
-  <circle cx="100" cy="24" r="18" fill="#5B3A29"/>
-  <path d="M42 96q4-52 58-56 54 4 58 56-24-6-40-30-18 26-76 30z" fill="#5B3A29"/>
-  <path d="M146 40l5 10 11 1-8 8 2 11-10-5-10 5 2-11-8-8 11-1z" fill="#FFC93C" stroke="#E0A800" stroke-width="1.5"/>
+  <path d="M100 44C128 44 144 64 144 92C144 120 126 146 100 148C74 146 56 120 56 92C56 64 72 44 100 44Z" fill="#FFE0C7"/>
+  <circle cx="100" cy="26" r="14" fill="#5B3A29"/>
+  <path d="M54 92Q56 44 100 41Q144 44 146 92Q126 86 114 64Q100 86 54 92Z" fill="#5B3A29"/>
+  <path d="M134 40l4 8 9 1-6.5 6.5 1.5 9-8-4-8 4 1.5-9-6.5-6.5 9-1z" fill="#FFC93C" stroke="#E0A800" stroke-width="1.3"/>
   ${eyes}
-  <circle cx="78" cy="98" r="17" fill="none" stroke="#8B5E3C" stroke-width="3.5"/><circle cx="122" cy="98" r="17" fill="none" stroke="#8B5E3C" stroke-width="3.5"/><path d="M95 98h10" stroke="#8B5E3C" stroke-width="3.5"/>
-  <ellipse cx="64" cy="122" rx="10" ry="7" fill="#FF9AA8" opacity=".7"/><ellipse cx="136" cy="122" rx="10" ry="7" fill="#FF9AA8" opacity=".7"/>
+  <circle cx="82" cy="95" r="13" fill="none" stroke="#8B5E3C" stroke-width="3"/><circle cx="118" cy="95" r="13" fill="none" stroke="#8B5E3C" stroke-width="3"/><path d="M95 95h10" stroke="#8B5E3C" stroke-width="3"/>
+  <ellipse cx="72" cy="113" rx="7.5" ry="5" fill="#FF9AA8" opacity=".7"/><ellipse cx="128" cy="113" rx="7.5" ry="5" fill="#FF9AA8" opacity=".7"/>
   ${mouth}</svg>`;
 }
 const say=(mood,html,w=130)=>`<div class="mjbar">${mj(mood,w)}<div class="bubble" id="bubble">${html}</div></div>`;
@@ -257,14 +258,16 @@ function sfx(type){
   if(type==='no'){tone(392,0,.22,'triangle',.18);tone(330,.2,.32,'triangle',.16);return}
   if(type==='pop'){tone(660,0,.12,'sine',.18);return}
   if(type==='ok'){sparkle();return}
-  if(type==='fan'){fanfare();clap(3,.2);whistle(1.3);return}
+  if(type==='fan'){fanfare();whistle(1.9);sparkle(2.3);return}
 }
-function praise(pct){ // 문장 점수에 따라 단계별 축하
-  if(pct>=90){fanfare();clap(3,.15);whistle(1.25);confetti(120);setTimeout(()=>speak(['Excellent!','Perfect!','Amazing!'][Math.floor(Math.random()*3)],0.9),2300);return 3}
-  if(pct>=70){sparkle();clap(2,.1);confetti(60);setTimeout(()=>speak(['Great job!','Very good!','Well done!'][Math.floor(Math.random()*3)],0.9),1300);return 2}
-  if(pct>=50){sparkle();clap(1,.05);confetti(20);setTimeout(()=>speak('Good try!',0.9),900);return 1}
+function tada(){[[784,0,.12],[1047,.13,.5]].forEach(([f,d,l])=>{tone(f,d,l,'sawtooth',.12);tone(f*2,d,l,'triangle',.04)})}
+function praise(pct){ // 문장 점수에 따라 단계별 축하 (박수 없이)
+  if(pct>=90){fanfare();whistle(1.9);sparkle(2.3);confetti(130);setTimeout(()=>speak(['Excellent!','Perfect!','Amazing!'][Math.floor(Math.random()*3)],0.9),2700);return 3}
+  if(pct>=70){tada();sparkle(.7);confetti(60);setTimeout(()=>speak(['Great job!','Very good!','Well done!'][Math.floor(Math.random()*3)],0.9),1300);return 2}
+  if(pct>=50){sparkle();confetti(20);setTimeout(()=>speak('Good try!',0.9),700);return 1}
   sfx('no');setTimeout(()=>speak("Let's try again!",0.9),700);return 0
 }
+
 
 /* ---------- 미국식 발음 (TTS) ---------- */
 let voices=[];
@@ -465,8 +468,8 @@ function wordStep(){
 }
 function answerM(ok){
   const {u,w}=cur();const R=rec(u.id,w);ses.res[ses.i].m=ok;
-  if(ok){R.mO++;R.wrongM=false;sparkle();clap(2,.05);confetti(60)}else{R.mX++;R.wrongM=true;sfx('no')}
-  R.done=true;R.last=Date.now();save();wordStep();setTimeout(()=>speak(w.word,0.75),ok?1200:250);
+  if(ok){R.mO++;R.wrongM=false;fanfare();confetti(70)}else{R.mX++;R.wrongM=true;sfx('no')}
+  R.done=true;R.last=Date.now();save();wordStep();setTimeout(()=>speak(w.word,0.75),ok?2300:250);
 }
 
 function sentStep(){
@@ -531,7 +534,7 @@ function resultHtml(pct,pass,heard){
 }
 function showRes(pct,pass,heard){
   $('#res').innerHTML=resultHtml(pct,pass,heard);
-  $('#bubble').innerHTML=pct>=90?'와! 미국 사람처럼 말했어! 최고야!':pct>=70?'정말 잘했어! 친구들이 박수 쳐 줘!':pct>=50?'좋아! 조금만 더 또박또박 해 볼까?':'괜찮아! 미국 발음을 한 번 더 듣고, 다시 말해 볼까?';
+  $('#bubble').innerHTML=pct>=90?'와! 미국 사람처럼 말했어! 최고야!':pct>=70?'정말 잘했어! 아주 멋져!':pct>=50?'좋아! 조금만 더 또박또박 해 볼까?':'괜찮아! 미국 발음을 한 번 더 듣고, 다시 말해 볼까?';
   praise(pct);
 }
 function commitS(){
