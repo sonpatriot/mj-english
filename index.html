@@ -161,7 +161,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
-const APP_VER='2026.11.17-10';
+const APP_VER='2026.11.17-11';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
@@ -516,19 +516,18 @@ function tipStep(tf){
    ${tf.map(x=>`<div class="tfrow"><div class="formula en">${tfFormula(x)}</div><div class="tfex">${tfText(x)}</div></div>`).join('')}
   </div></div><aside class="side"><div class="ctrl">
    <button class="b-yellow" id="tfhear">변신 소리 듣기</button>
-   <button class="b-green go" id="tfgo">문장 보러 가기 →</button>
-   ${ses.i>0?'<button class="b-white" id="prev">← 이전</button>':''}
-  </div>${say('wow',ing&&pl?'잠깐! 문장에 나오기 전에 단어들이 꼬리를 달고 변신했어!':ing?'잠깐! 이 단어가 <b>ing</b> 꼬리를 달고 변신했어!':'잠깐! 여러 개라서 꼬리가 생겼어!')}</aside></div>`;
+   <button class="b-green go" id="tfgo">${nextLabel()}</button>
+   <button class="b-white" id="back2">← 문장으로</button>
+  </div>${say('wow',ing&&pl?'방금 문장에서 단어들이 꼬리를 달고 변신했어!':ing?'방금 문장에서 단어가 <b>ing</b> 꼬리를 달고 변신했어!':'방금 문장에서 여러 개라서 꼬리가 생겼어!')}</aside></div>`;
   bindQuit();
   $('#tfhear').onclick=()=>speak(tf.map(x=>x.base+'. '+x.form+'.').join(' '),0.75);
-  $('#tfgo').onclick=()=>{r.tipSeen=true;sentStep()};
-  if($('#prev'))$('#prev').onclick=()=>goTo(ses.i-1);
+  $('#tfgo').onclick=()=>{r.tipSeen=true;nextStep()};
+  $('#back2').onclick=()=>{r.tipSeen=true;sentStep()};
   setTimeout(()=>speak(tf.map(x=>x.base+'. '+x.form+'.').join(' '),0.75),400);
 }
 function sentStep(){
   stopAll();const {u,st}=cur();const r=ses.res[ses.i];const toks=st.text.split(/\s+/);
-  const tf=transforms(u,st);if(tf.length&&!r.tipSeen){keepResume();return tipStep(tf)}
-  keepResume();
+  const tf=transforms(u,st);keepResume();
   app.innerHTML=header()+`<div class="stage"><div class="card focus">
    <div class="sgrid">${st.img?`<div class="sl"><img class="pic" src="${esc(st.img)}" alt=""></div>`:''}
    <div class="sent en" id="sent">${toks.map((t,i)=>{const c=t.toLowerCase().replace(/[^a-z']/g,'');const x=tf.find(x=>x.form===c);
@@ -543,7 +542,8 @@ function sentStep(){
   if($('#tfagain'))$('#tfagain').onclick=()=>tipStep(tf);
   bindQuit();
   $('#play').onclick=()=>speak(st.text);$('#slow').onclick=()=>speak(st.text,0.55);
-  $('#prev').onclick=()=>goTo(ses.i-1);$('#nx').onclick=nextStep;
+  $('#prev').onclick=()=>goTo(ses.i-1);
+  $('#nx').onclick=()=>{if(tf.length&&!r.tipSeen){commitIfAnswered();tipStep(tf)}else nextStep()};
   refreshMic();fitSent();setTimeout(()=>speak(st.text),350);
 }
 /* 문장 글자를 카드 안에서 가능한 한 크게 */
