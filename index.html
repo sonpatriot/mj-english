@@ -101,7 +101,7 @@ button:disabled{opacity:.45;cursor:default}
 /* 갤럭시 탭 S7 FE (1280×800 가로 / 800×1280 세로) 맞춤 */
 body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
 .adm input,.adm textarea{-webkit-user-select:text;user-select:text}
-@media (orientation:landscape) and (min-width:900px) and (max-height:960px){
+@media (orientation:landscape) and (min-width:900px){
  .wrap{max-width:1280px;padding:10px 20px 16px}
  .top{margin-bottom:8px}.top h2{font-size:26px}
  .card{padding:18px 26px}
@@ -115,9 +115,9 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
  body .side .mjbar svg{width:120px;height:auto}
  body .side .bubble{margin:0 0 12px;text-align:center}
  body .side .bubble:before{left:50%;bottom:-22px;margin-left:-10px;border:11px solid transparent;border-top:13px solid #fff}
- body .sgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:26px}
- body .sl .pic{max-height:calc(100vh - 140px);width:100%;object-fit:contain}
- body .sent{font-size:min(7vw,14vh);text-align:left}
+ body .sgrid{grid-template-columns:1fr;gap:10px;height:100%;align-content:center}
+ body .sl .pic{max-height:44vh;width:auto;max-width:100%;object-fit:contain}
+ body .sent{text-align:center}
  .hero{margin:0 0 14px}.hero svg{width:140px;height:auto}
  .grid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
 }
@@ -126,7 +126,8 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
  body .focus{min-height:52vh}
 }
 .focus{display:flex;flex-direction:column;justify-content:center}
-.sgrid{display:grid;gap:14px;align-items:center}
+.sgrid{display:grid;gap:14px;align-items:center;justify-items:center}
+.sent{line-height:1.12}
 .side{margin-top:14px}
 .side .ctrl{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
 .side button{font-size:19px;min-height:50px;padding:6px 14px;border-radius:18px;box-shadow:0 4px 0 rgba(0,0,0,.16)}
@@ -153,7 +154,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
-const APP_VER='2026.11.17-4';
+const APP_VER='2026.11.17-5';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
@@ -420,8 +421,20 @@ function sentStep(){
   $('#play').onclick=()=>speak(w.sentence);$('#slow').onclick=()=>speak(w.sentence,0.55);
   $('#toW').onclick=()=>wordStep();
   $('#next').onclick=()=>{commitS();if(ses.i<ses.items.length-1){ses.i++;wordStep()}else finish(false)};
-  refreshMic();setTimeout(()=>speak(w.sentence),350);
+  refreshMic();fitSent();setTimeout(()=>speak(w.sentence),350);
 }
+/* 문장 글자를 카드 안에서 가능한 한 크게 */
+function fitSent(){
+  const el=$('#sent'),card=el&&el.closest('.card');if(!el)return;
+  const img=card.querySelector('.pic');
+  const run=()=>{
+    const pad=40,avail=card.clientHeight-(img?img.getBoundingClientRect().height:0)-pad-24;
+    let fs=Math.min(150,Math.max(48,window.innerWidth*0.09));el.style.fontSize=fs+'px';
+    while(fs>36&&(el.scrollHeight>avail||el.scrollWidth>el.clientWidth+2)){fs-=4;el.style.fontSize=fs+'px'}
+  };
+  run();if(img&&!img.complete)img.addEventListener('load',run,{once:true});
+}
+window.addEventListener('resize',()=>{if($('#sent'))fitSent()});
 function refreshMic(){
   const row=$('#microw');if(!row||!ses)return;
   if(micMode==='native'||micMode==='dict'||micMode==='wait'){
