@@ -35,7 +35,7 @@ button:disabled{opacity:.45;cursor:default}
 .top h2{margin:0;font-size:24px;font-weight:400;flex:1}
 .prog{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .dot{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #9cc4f0}
-.dot.go{cursor:pointer}.dot.go:hover{transform:scale(1.35)}
+.dot.sq{border-radius:4px}.dot.go{cursor:pointer}.dot.go:hover{transform:scale(1.35)}
 .dot.ok{background:var(--green);border-color:var(--green)}.dot.no{background:var(--coral);border-color:var(--coral)}.dot.now{background:var(--yellow);border-color:#d89b00;transform:scale(1.3)}
 .card{background:var(--card);border-radius:36px;box-shadow:0 10px 0 rgba(30,80,140,.12);padding:clamp(16px,3vw,36px);position:relative}
 .word{font-size:clamp(110px,24vw,240px);line-height:1.1;text-align:center;margin:10px 0 0;word-break:break-word}
@@ -154,7 +154,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
-const APP_VER='2026.11.17-5';
+const APP_VER='2026.11.17-6';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
@@ -332,12 +332,12 @@ function unitHome(id){
   <div class="card" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px;align-items:center">
    ${u.cover?`<img class="pic" src="${esc(u.cover)}" alt="" style="max-height:46vh">`:''}
    <div><div class="en" style="font-size:clamp(40px,6vw,64px);line-height:1.05">${esc(u.title)}</div><p style="font-size:24px;margin:6px 0 18px;color:var(--muted)">${esc(u.titleKo||'')} · 단어 ${u.words.length}개</p>
-   <div style="display:grid;gap:12px">${rs?`<button class="b-green big" id="cont">이어서 하기 (${rs.i+1}번째 단어 <span class="en">${esc(u.words[rs.items[rs.i].i]?.word||'')}</span>부터)</button><button class="b-white big" id="go">처음부터 다시 하기</button>`:'<button class="b-green big" id="go">단어 공부 시작하기</button>'}
+   <div style="display:grid;gap:12px">${rs?`<button class="b-green big" id="cont">이어서 하기 (${rs.items[rs.i].t==='w'?`<span class="en">${esc(u.words[rs.items[rs.i].i]?.word||'')}</span>부터`:'문장부터'})</button><button class="b-white big" id="go">처음부터 다시 하기</button>`:'<button class="b-green big" id="go">단어 공부 시작하기</button>'}
    ${u.pages&&u.pages.length?'<button class="b-yellow big" id="story">이야기 듣기</button>':''}
    ${wr.length?`<button class="b-coral big" id="rv">틀린 것만 다시 하기 (${wr.length}개)</button>`:''}</div></div></div>
-  ${say('happy',rs?`지난번에 <b>${rs.i}개</b>까지 했어! 이어서 해 볼까?`:`<span class="en">${esc(u.title)}</span>! 먼저 이야기를 듣고, 단어 공부를 해 볼까?`)}`;
+  ${say('happy',rs?`지난번에 단어 <b>${rs.items.slice(0,rs.i).filter(x=>x.t==='w').length}개</b>까지 했어! 이어서 해 볼까?`:`<span class="en">${esc(u.title)}</span>! 먼저 이야기를 듣고, 단어 공부를 해 볼까?`)}`;
   $('#back').onclick=home;$('#go').onclick=()=>{delete S.resume[id];save();start(id,'learn',u.words.map(w=>({u:id,i:w.idx})))};
-  if($('#cont'))$('#cont').onclick=()=>{ses={uid:id,mode:'learn',items:rs.items,i:rs.i,res:rs.res,max:rs.max??rs.i,t0:Date.now()};if(rs.step==='sent')sentStep();else wordStep()};
+  if($('#cont'))$('#cont').onclick=()=>{ses={uid:id,mode:'learn',items:rs.items,i:rs.i,res:rs.res,max:rs.max??rs.i,t0:Date.now()};render()};
   if($('#story'))$('#story').onclick=()=>story(id,0);
   if($('#rv'))$('#rv').onclick=()=>start(id,'review',wr.map(w=>({u:id,i:w.idx})));
 }
@@ -353,75 +353,98 @@ function story(id,p){
   $('#nx').onclick=()=>{if(p<u.pages.length-1)story(id,p+1);else{sfx('fan');confetti();unitHome(id)}};
 }
 
-/* ---------- 학습 진행 ---------- */
+/* ---------- 학습 진행 ----------
+   단어를 하나씩 공부하고, 한 문장에 들어 있는 단어를 모두 배운 뒤에 그 문장(예문)이 나와요. */
 let ses=null;
-function start(uid,mode,items){
-  if(!items.length)return;
-  ses={uid,mode,items,i:0,max:0,res:items.map(()=>({m:null,s:null,best:0})),t0:Date.now()};
-  wordStep();
+function lemmaHit(tok,word){
+  const t=tok.toLowerCase().replace(/[^a-z']/g,''),w=word.toLowerCase();if(!t)return false;if(t===w)return true;
+  return [w+'s',w+'es',w+'ing',w+'ed',w.replace(/e$/,'')+'ing',w.replace(/e$/,'')+'ed',w+w.slice(-1)+'ing',w.replace(/y$/,'ies')].includes(t);
+}
+function sentWords(u,text){
+  const toks=text.split(/\s+/),low=text.toLowerCase();
+  return u.words.filter(w=>w.sentence===text||(w.word.includes(' ')?low.includes(w.word.toLowerCase()):toks.some(t=>lemmaHit(t,w.word)))).map(w=>w.idx);
+}
+function buildPlan(sel){
+  const sents=[],seen=new Set();
+  for(const uid of [...new Set(sel.map(x=>x.u))]){const u=unitById(uid);
+    for(const w of u.words){const t=(w.sentence||'').trim();if(!t||seen.has(uid+'|'+t))continue;seen.add(uid+'|'+t);sents.push({u:uid,text:t,img:w.img,words:sentWords(u,t)})}}
+  const selKey=new Set(sel.map(x=>x.u+'|'+x.i)),done=new Set(),placed=new Set(),steps=[];
+  for(const x of sel){steps.push({t:'w',u:x.u,i:x.i});done.add(x.u+'|'+x.i);
+    sents.forEach((s,k)=>{if(placed.has(k)||s.u!==x.u)return;const need=s.words.filter(i=>selKey.has(s.u+'|'+i));
+      if(need.length&&need.every(i=>done.has(s.u+'|'+i))){placed.add(k);steps.push({t:'s',u:s.u,text:s.text,img:s.img,words:need})}})}
+  return steps;
+}
+const sigOf=items=>items.map(s=>s.t==='w'?s.u+':'+s.i:'s:'+s.text).join('|');
+const newRes=items=>items.map(s=>s.t==='w'?{m:null}:{s:null,best:0,tries:0,cT:0});
+function start(uid,mode,sel){
+  if(!sel.length)return;const items=buildPlan(sel);
+  ses={uid,mode,items,i:0,max:0,res:newRes(items),t0:Date.now()};render();
 }
 function getResume(u){
-  const r=S.resume&&S.resume[u.id];if(!r||!Array.isArray(r.items)||!r.items.length)return null;
-  if(r.items.length!==u.words.length||r.items.some((it,k)=>it.i!==k)||r.i<1&&r.step!=='sent'&&r.res[0]?.m==null)return null;
-  return r;
+  const r=S.resume&&S.resume[u.id];if(!r||!r.sig||!Array.isArray(r.res))return null;
+  const items=buildPlan(u.words.map(w=>({u:u.id,i:w.idx})));
+  if(sigOf(items)!==r.sig||r.res.length!==items.length||!r.i)return null;
+  return {...r,items};
 }
-function keepResume(step){
+function keepResume(){
   if(!ses)return;ses.max=Math.max(ses.max||0,ses.i);
   if(ses.mode!=='learn'||!ses.uid)return;
-  const back=ses.i<ses.max;S.resume[ses.uid]={items:ses.items,i:ses.max,step:back?'word':step,res:ses.res,max:ses.max,at:Date.now()};save();
+  S.resume[ses.uid]={sig:sigOf(ses.items),i:ses.max,res:ses.res,max:ses.max,at:Date.now()};save();
 }
-function goTo(j,step){commitIfAnswered();ses.i=j;step==='sent'?sentStep():wordStep()}
-function commitIfAnswered(){const r=ses.res[ses.i];if(r.m!==null&&(r.s!==null||r.tries))commitS()}
-const cur=()=>{const it=ses.items[ses.i];const u=unitById(it.u);return {u,w:u.words[it.i]}};
+const cur=()=>{const st=ses.items[ses.i];const u=unitById(st.u);return {u,st,w:st.t==='w'?u.words[st.i]:null}};
+const render=()=>ses.items[ses.i].t==='w'?wordStep():sentStep();
+function nextStep(){commitIfAnswered();if(ses.i<ses.items.length-1){ses.i++;render()}else finish(false)}
+function goTo(j){commitIfAnswered();ses.i=j;render()}
+function commitIfAnswered(){const st=ses.items[ses.i],r=ses.res[ses.i];if(st.t==='s'&&(r.s!==null||r.tries))commitS()}
+function nextLabel(){const n=ses.items[ses.i+1];return !n?'결과 보기 →':n.t==='s'?'문장 보러 가기 →':'다음 단어 →'}
 function header(){
   const {u}=cur();const title=ses.mode==='review'?'틀린 것 다시 하기':u.title;
-  return `<div class="top"><button class="b-white" id="quit">← 그만하기</button><h2 class="${ses.mode==='review'?'':'en'}">${esc(title)} <span style="color:var(--muted);font-family:Jua">${ses.i+1} / ${ses.items.length}</span></h2>
-  <div class="prog">${ses.items.map((_,i)=>{const r=ses.res[i];const ok=r.m!==null&&r.s!==null?(r.m&&r.s?'ok':'no'):'';const can=i!==ses.i&&i<=(ses.max||0);return `<span class="dot ${i===ses.i?'now':ok}${can?' go" data-j="'+i+'" title="'+(i+1)+'번째 단어로':''}"></span>`}).join('')}</div></div>`;
+  const wN=ses.items.filter(s=>s.t==='w').length,wNow=ses.items.slice(0,ses.i+1).filter(s=>s.t==='w').length;
+  return `<div class="top"><button class="b-white" id="quit">← 그만하기</button><h2 class="${ses.mode==='review'?'':'en'}">${esc(title)} <span style="color:var(--muted);font-family:Jua">단어 ${wNow} / ${wN}</span></h2>
+  <div class="prog">${ses.items.map((s,i)=>{const r=ses.res[i];const v=s.t==='w'?r.m:r.s;const ok=v===true?'ok':v===false?'no':'';const can=i!==ses.i&&i<=(ses.max||0);
+    return `<span class="dot ${s.t==='s'?'sq ':''}${i===ses.i?'now':ok}${can?' go" data-j="'+i:''}"></span>`}).join('')}</div></div>`;
 }
-function bindQuit(){$('#quit').onclick=()=>{stopAll();finish(true)};app.querySelectorAll('.dot.go').forEach(d=>d.onclick=()=>goTo(+d.dataset.j,'word'))}
+function bindQuit(){$('#quit').onclick=()=>{stopAll();finish(true)};app.querySelectorAll('.dot.go').forEach(d=>d.onclick=()=>goTo(+d.dataset.j))}
 
 function wordStep(){
-  stopAll();keepResume('word');const {u,w}=cur();const r=ses.res[ses.i];const long=w.word.length>7;
+  stopAll();keepResume();const {u,w}=cur();const r=ses.res[ses.i];const long=w.word.length>7;
   const ctrl=r.m===null
    ?`<div class="two"><button class="b-yellow" id="hear">단어 소리</button><button class="b-white" id="peek">뜻 보기</button></div>
      <div class="two"><button class="b-green oxb" id="o">O 맞았어요</button><button class="b-coral oxb" id="x">X 몰랐어요</button></div>
      <p class="hint">아이가 뜻을 말하면 엄마·아빠가 눌러 주세요</p>`
-   :`<button class="b-yellow" id="hear">단어 소리 듣기</button><button class="b-green go" id="toS">예문 보러 가기 →</button><button class="b-ghost" id="redo">뜻 다시 판정하기</button>`;
+   :`<button class="b-yellow" id="hear">단어 소리 듣기</button><button class="b-green go" id="nx">${nextLabel()}</button><button class="b-ghost" id="redo">뜻 다시 판정하기</button>`;
   app.innerHTML=header()+`<div class="stage"><div class="card focus">
    <div class="word en ${long?'long':''}">${esc(w.word)}</div>
    <div class="mean ${r.m===null?'hide':''} ${w.meaning.length>6?'small':''}" id="mean">${esc(w.meaning)}</div>
-  </div><aside class="side"><div class="ctrl">${ctrl}${ses.i>0?'<button class="b-white" id="prev">← 이전 단어</button>':''}</div>
+  </div><aside class="side"><div class="ctrl">${ctrl}${ses.i>0?'<button class="b-white" id="prev">← 이전</button>':''}</div>
   ${say(r.m===null?'think':r.m?'cheer':'hug',r.m===null?'이 단어는 무슨 뜻일까? 소리 내어 말해 봐!':r.m?'딩동댕! 정말 잘했어!':`괜찮아! <b>${esc(w.word)}</b>는 <b>${esc(w.meaning)}</b>(이)야. 같이 외워 보자!`)}</aside></div>`;
   bindQuit();$('#hear').onclick=()=>speak(w.word,0.75);
   if($('#peek'))$('#peek').onclick=()=>{$('#mean').classList.remove('hide');$('#peek').disabled=true};
-  if(r.m===null){$('#o').onclick=()=>answerM(true);$('#x').onclick=()=>answerM(false)}else bindNextWord();
-  if($('#prev'))$('#prev').onclick=()=>goTo(ses.i-1,'sent');
+  if(r.m===null){$('#o').onclick=()=>answerM(true);$('#x').onclick=()=>answerM(false)}else $('#nx').onclick=nextStep;
+  if($('#prev'))$('#prev').onclick=()=>goTo(ses.i-1);
   if($('#redo'))$('#redo').onclick=()=>{r.m=null;wordStep()};
 }
-const nextWordBtn=()=>`<div class="row"><button class="b-green big" id="toS">예문 보러 가기 →</button></div>`;
-function bindNextWord(){$('#toS').onclick=sentStep}
 function answerM(ok){
-  const {u,w}=cur();const r=rec(u.id,w);ses.res[ses.i].m=ok;
-  if(ok){r.mO++;r.wrongM=false;sfx('ok');confetti()}else{r.mX++;r.wrongM=true;sfx('no')}
-  r.last=Date.now();save();wordStep();setTimeout(()=>speak(w.word,0.75),250);
+  const {u,w}=cur();const R=rec(u.id,w);ses.res[ses.i].m=ok;
+  if(ok){R.mO++;R.wrongM=false;sfx('ok');confetti()}else{R.mX++;R.wrongM=true;sfx('no')}
+  R.done=true;R.last=Date.now();save();wordStep();setTimeout(()=>speak(w.word,0.75),250);
 }
 
 function sentStep(){
-  stopAll();keepResume('sent');const {u,w}=cur();const r=ses.res[ses.i];const toks=w.sentence.split(/\s+/);
+  stopAll();keepResume();const {st}=cur();const r=ses.res[ses.i];const toks=st.text.split(/\s+/);
   app.innerHTML=header()+`<div class="stage"><div class="card focus">
-   <div class="sgrid">${w.img?`<div class="sl"><img class="pic" src="${esc(w.img)}" alt=""></div>`:''}
+   <div class="sgrid">${st.img?`<div class="sl"><img class="pic" src="${esc(st.img)}" alt=""></div>`:''}
    <div class="sent en" id="sent">${toks.map((t,i)=>`<span data-i="${i}">${esc(t)}</span>`).join(' ')}</div></div>
   </div><aside class="side"><div class="ctrl">
    <div class="two"><button class="b-yellow" id="play">미국 발음</button><button class="b-white" id="slow">천천히</button></div>
    <div class="microw" id="microw"></div>
    <div class="result" id="res">${r.s!==null?resultHtml(r.best,r.s,''):''}</div>
-   <div class="two"><button class="b-white" id="toW">← 단어로</button><button class="b-green" id="next">${ses.i<ses.items.length-1?'다음 →':'결과 →'}</button></div>
-  </div>${say('happy','잘 듣고, 마이크를 누르고 따라 말해 봐!')}</aside></div>`;
+   <button class="b-green go" id="nx">${nextLabel()}</button><button class="b-white" id="prev">← 이전</button>
+  </div>${say('happy','배운 단어로 된 문장이야! 잘 듣고, 마이크를 누르고 따라 말해 봐!')}</aside></div>`;
   bindQuit();
-  $('#play').onclick=()=>speak(w.sentence);$('#slow').onclick=()=>speak(w.sentence,0.55);
-  $('#toW').onclick=()=>wordStep();
-  $('#next').onclick=()=>{commitS();if(ses.i<ses.items.length-1){ses.i++;wordStep()}else finish(false)};
-  refreshMic();fitSent();setTimeout(()=>speak(w.sentence),350);
+  $('#play').onclick=()=>speak(st.text);$('#slow').onclick=()=>speak(st.text,0.55);
+  $('#prev').onclick=()=>goTo(ses.i-1);$('#nx').onclick=nextStep;
+  refreshMic();fitSent();setTimeout(()=>speak(st.text),350);
 }
 /* 문장 글자를 카드 안에서 가능한 한 크게 */
 function fitSent(){
@@ -448,7 +471,7 @@ function manualRow(row,msg){
   $('#mx').onclick=()=>{const r=ses.res[ses.i];r.s=r.s||false;r.tries=(r.tries||0)+1;showRes(0,false,'(엄마·아빠 판정)')};
 }
 function doListen(){
-  const {w}=cur();try{speechSynthesis.cancel()}catch(e){}
+  const {st}=cur();try{speechSynthesis.cancel()}catch(e){}
   const btn=$('#mic');btn.classList.add('on');btn.disabled=true;
   $('#res').innerHTML='<span class="heard">듣고 있어요… 문장을 말해 봐!</span>';
   document.querySelectorAll('#sent span').forEach(s=>s.className='');
@@ -458,10 +481,10 @@ function doListen(){
     if(err&&/not-allowed|not_granted|service-not-allowed|audio-capture|start/.test(err)){
       manualRow($('#microw'),'마이크를 쓸 수 없어요 (권한이 꺼져 있거나 이 화면에서 막혀 있어요).');$('#res').innerHTML='';return}
     if(!alts.length){$('#res').innerHTML='<span class="heard">소리가 잘 안 들렸어요. 마이크 버튼을 누르고 조금 더 크게 말해 볼까?</span>';sfx('pop');return}
-    const g=grade(w.sentence,alts);const r=ses.res[ses.i];r.tries=(r.tries||0)+1;
+    const g=grade(st.text,alts);const r=ses.res[ses.i];r.tries=(r.tries||0)+1;
     const pass=g.pct>=S.settings.pass;r.best=Math.max(r.best,g.pct);r.s=r.s||pass;
     document.querySelectorAll('#sent span').forEach((s,i)=>s.className=g.marks[i]?'hit':'miss');
-    showRes(g.pct,pass,g.heard);keepResume('sent');
+    showRes(g.pct,pass,g.heard);keepResume();
   });
 }
 function resultHtml(pct,pass,heard){
@@ -473,25 +496,28 @@ function showRes(pct,pass,heard){
   if(pass){sfx(pct>=90?'fan':'ok');confetti()}else sfx('no');
 }
 function commitS(){
-  const {u,w}=cur();const r=ses.res[ses.i];const R=rec(u.id,w);
-  if(r.s===null)r.s=false;
-  R.tries+=(r.tries||0)-(r.cT||0);r.cT=r.tries||0;R.best=Math.max(R.best,r.best);R.wrongS=!r.s;R.done=true;R.last=Date.now();
-  if(ses.mode==='review'&&r.m&&r.s){R.wrongM=false;R.wrongS=false}
+  const {u,st}=cur();const r=ses.res[ses.i];if(r.s===null)r.s=false;
+  const d=(r.tries||0)-(r.cT||0);r.cT=r.tries||0;
+  for(const idx of st.words){const w=u.words[idx];const R=rec(u.id,w);
+    R.tries+=d;R.best=Math.max(R.best,r.best);
+    const mine=ses.items.map((x,k)=>({x,r:ses.res[k]})).filter(o=>o.x.t==='s'&&o.x.u===u.id&&o.x.words.includes(idx)&&o.r.s!==null);
+    R.wrongS=mine.some(o=>!o.r.s);R.done=true;R.last=Date.now();}
   save();
 }
 function finish(quit){
   if(!quit&&ses.mode==='learn'&&ses.uid){delete S.resume[ses.uid];save()}
-  const n=ses.res.filter(r=>r.m!==null).length;
-  if(!n){const id=ses.uid;ses=null;return id?unitHome(id):home()}
-  const mO=ses.res.filter(r=>r.m).length,sP=ses.res.filter(r=>r.s).length,stars=ses.res.reduce((a,r)=>a+starN(r.best),0);
-  S.sessions.unshift({d:Date.now(),u:ses.uid||'(여러 단원)',mode:ses.mode,n,mO,sP,sec:Math.round((Date.now()-ses.t0)/1000),quit});S.sessions=S.sessions.slice(0,300);save();
-  const wrongNow=ses.items.map((it,i)=>({it,r:ses.res[i]})).filter(x=>x.r.m!==null&&!(x.r.m&&x.r.s));
-  const words=wrongNow.map(x=>{const u=unitById(x.it.u);return u.words[x.it.i]});
-  const uid=ses.uid;const retry=wrongNow.map(x=>x.it);ses=null;
+  const W=ses.items.map((x,k)=>({x,r:ses.res[k]})).filter(o=>o.x.t==='w'&&o.r.m!==null);
+  const Ss=ses.items.map((x,k)=>({x,r:ses.res[k]})).filter(o=>o.x.t==='s'&&o.r.s!==null);
+  const n=W.length;if(!n){const id=ses.uid;ses=null;return id?unitHome(id):home()}
+  const mO=W.filter(o=>o.r.m).length,ns=Ss.length,sP=Ss.filter(o=>o.r.s).length,stars=Ss.reduce((a,o)=>a+starN(o.r.best),0);
+  S.sessions.unshift({d:Date.now(),u:ses.uid||'(여러 단원)',mode:ses.mode,n,mO,ns,sP,sec:Math.round((Date.now()-ses.t0)/1000),quit});S.sessions=S.sessions.slice(0,300);save();
+  const failed=new Set();Ss.filter(o=>!o.r.s).forEach(o=>o.x.words.forEach(i=>failed.add(o.x.u+'|'+i)));
+  const retry=W.filter(o=>!o.r.m||failed.has(o.x.u+'|'+o.x.i)).map(o=>({u:o.x.u,i:o.x.i}));
+  const words=retry.map(x=>unitById(x.u).words[x.i]);const uid=ses.uid;ses=null;
   app.innerHTML=`<div class="card" style="text-align:center">
    <div style="font-size:clamp(34px,6vw,56px)">${quit?'여기까지 했어요!':'다 했어요! 최고야!'}</div>
-   ${starsHtml(Math.min(3,Math.round(stars/Math.max(1,n))))}
-   <div class="row" style="font-size:26px;gap:28px"><div>뜻 맞힘<br><b style="font-size:44px">${mO}/${n}</b></div><div>발음 통과<br><b style="font-size:44px">${sP}/${n}</b></div><div>모은 별<br><b style="font-size:44px">★ ${stars}</b></div></div>
+   ${ns?starsHtml(Math.min(3,Math.round(stars/ns))):''}
+   <div class="row" style="font-size:26px;gap:28px"><div>뜻 맞힘<br><b style="font-size:44px">${mO}/${n}</b></div><div>문장 통과<br><b style="font-size:44px">${sP}/${ns}</b></div><div>모은 별<br><b style="font-size:44px">★ ${stars}</b></div></div>
    ${words.length?`<p style="font-size:24px;margin:18px 0 8px">다시 해 볼 단어</p><div class="chips en">${words.map(w=>`<span class="chip no">${esc(w.word)}</span>`).join('')}</div>`:'<p style="font-size:26px">틀린 단어가 하나도 없어요!</p>'}
    <div class="row" style="margin-top:22px">${words.length?`<button class="b-coral big" id="again">틀린 것 다시 하기 (${words.length}개)</button>`:''}<button class="b-green big" id="out">${uid?'단원으로':'처음으로'}</button></div></div>
    ${say(words.length?'hug':'cheer',words.length?'틀린 단어만 한 번 더 해 보면 금방 외울 수 있어!':'완벽해! 선생님이 박수 쳐 줄게!')}`;
@@ -539,8 +565,8 @@ function admStat(p){
 }
 function admLog(p){
   const name=id=>unitById(id)?.title||id;
-  p.innerHTML=`<div class="box">${S.sessions.length?`<div class="scroll"><table class="stack"><thead><tr><th>날짜</th><th>단원</th><th>방식</th><th>단어 수</th><th>뜻 맞힘</th><th>발음 통과</th><th>걸린 시간</th></tr></thead><tbody>
-  ${S.sessions.map(s=>`<tr><td>${fmt(s.d)}</td><td>${esc(name(s.u))}</td><td>${s.mode==='review'?'오답 복습':'단어 공부'}${s.quit?' (중간 종료)':''}</td><td class="n">${s.n}</td><td class="n">${s.mO}/${s.n}</td><td class="n">${s.sP}/${s.n}</td><td class="n">${Math.floor(s.sec/60)}분 ${s.sec%60}초</td></tr>`).join('')}</tbody></table></div>
+  p.innerHTML=`<div class="box">${S.sessions.length?`<div class="scroll"><table class="stack"><thead><tr><th>날짜</th><th>단원</th><th>방식</th><th>단어 수</th><th>뜻 맞힘</th><th>문장 통과</th><th>걸린 시간</th></tr></thead><tbody>
+  ${S.sessions.map(s=>`<tr><td>${fmt(s.d)}</td><td>${esc(name(s.u))}</td><td>${s.mode==='review'?'오답 복습':'단어 공부'}${s.quit?' (중간 종료)':''}</td><td class="n">${s.n}</td><td class="n">${s.mO}/${s.n}</td><td class="n">${s.sP}/${s.ns??s.n}</td><td class="n">${Math.floor(s.sec/60)}분 ${s.sec%60}초</td></tr>`).join('')}</tbody></table></div>
   <div class="row" style="justify-content:flex-start"><button class="b-coral" id="cl">기록 목록 비우기</button></div>`:'<p>아직 공부한 기록이 없어요.</p>'}</div>`;
   if($('#cl'))$('#cl').onclick=()=>confirmBox('학습 기록 목록을 비울까요? (단어별 점수는 남아요)',()=>{S.sessions=[];save();admLog(p)});
 }
