@@ -154,7 +154,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
-const APP_VER='2026.11.17-8';
+const APP_VER='2026.11.17-9';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
@@ -194,14 +194,14 @@ function mj(mood='happy',w=150){
     cheer:'<path d="M87 114q13 20 26 0z" fill="#c0392b"/><path d="M93 121q7 5 14 0" fill="#ff8a80"/>',
     hug:'<path d="M91 117q9 8 18 0" stroke="#c0392b" stroke-width="4" fill="none" stroke-linecap="round"/>'}[mood];
   const up=mood==='cheer'||mood==='wow';
-  const arms=up?'<path d="M60 178q-28-30-24-66" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><circle cx="36" cy="108" r="10" fill="#FFE0C7"/><path d="M140 178q28-30 24-66" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><circle cx="164" cy="108" r="10" fill="#FFE0C7"/>'
-   :'<path d="M62 178q-16 22-10 46" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><circle cx="53" cy="227" r="9.5" fill="#FFE0C7"/><path d="M138 178q22 12 30 32" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><rect x="158" y="200" width="30" height="24" rx="4" fill="#3D8BFF" transform="rotate(-12 173 212)"/><text x="173" y="217" font-size="13" fill="#fff" text-anchor="middle" font-family="Andika,Arial" transform="rotate(-12 173 212)">ABC</text>';
+  const arms=up?'<path d="M60 172q-28-28-24-62" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><circle cx="36" cy="110" r="10" fill="#FFE0C7"/><path d="M140 172q28-28 24-62" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><circle cx="164" cy="110" r="10" fill="#FFE0C7"/>'
+   :'<path d="M62 172q-16 24-10 50" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><circle cx="53" cy="227" r="9.5" fill="#FFE0C7"/><path d="M138 172q22 14 30 36" stroke="#FF8FA3" stroke-width="17" fill="none" stroke-linecap="round"/><rect x="158" y="200" width="30" height="24" rx="4" fill="#3D8BFF" transform="rotate(-12 173 212)"/><text x="173" y="217" font-size="13" fill="#fff" text-anchor="middle" font-family="Andika,Arial" transform="rotate(-12 173 212)">ABC</text>';
   return `<svg width="${w}" height="${w*1.2}" viewBox="0 0 200 240" role="img" aria-label="MJ선생님">
   <ellipse cx="100" cy="236" rx="56" ry="5" fill="rgba(30,80,140,.15)"/>
   <path d="M46 98Q44 34 100 33Q156 34 154 98V142Q146 148 136 144V100H64V144Q54 148 46 142Z" fill="#5B3A29"/>
-  <rect x="92" y="140" width="16" height="22" rx="6" fill="#F7CFB2"/>
-  <path d="M58 170q42-18 84 0l10 68H48z" fill="#FF8FA3"/>
-  <path d="M88 166l12 20 12-20z" fill="#fff"/>
+  <rect x="92" y="140" width="16" height="16" rx="6" fill="#F7CFB2"/>
+  <path d="M58 163q42-17 84 0l10 75H48z" fill="#FF8FA3"/>
+  <path d="M89 157l11 18 11-18z" fill="#fff"/>
   <rect x="110" y="196" width="30" height="20" rx="6" fill="#fff"/><text x="125" y="211" font-size="13" text-anchor="middle" fill="#FF5A7A" font-family="Andika,Arial" font-weight="700">MJ</text>
   ${arms}
   <path d="M100 44C128 44 144 64 144 92C144 120 126 146 100 148C74 146 56 120 56 92C56 64 72 44 100 44Z" fill="#FFE0C7"/>
