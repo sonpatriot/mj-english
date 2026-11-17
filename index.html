@@ -104,26 +104,42 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 @media (orientation:landscape) and (min-width:900px) and (max-height:960px){
  .wrap{max-width:1280px;padding:10px 20px 16px}
  .top{margin-bottom:8px}.top h2{font-size:26px}
- .stage{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:end}
- .stage .mjbar{flex-direction:column-reverse;align-items:center;margin:0}
- .stage .mjbar svg{width:170px;height:auto}
- .stage .bubble{margin:0 0 12px;font-size:22px;text-align:center}
- .stage .bubble:before{left:50%;bottom:-24px;margin-left:-10px;border:12px solid transparent;border-top:14px solid #fff}
  .card{padding:18px 26px}
  .word{font-size:min(20vw,27vh);margin:0}.word.long{font-size:min(13vw,20vh)}
  .mean{font-size:min(10vw,12vh);margin:0 0 4px}.mean.small{font-size:min(6.5vw,9vh)}
- .ox button{min-height:78px}
- .sgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:22px;align-items:center}
- .sl .pic{max-height:66vh;width:100%;object-fit:contain}
- .sent{font-size:min(5.6vw,10vh);margin:0 0 6px}
- .sr .row{margin-top:10px}.mic{width:104px;height:104px}.result{margin-top:6px;min-height:0}.stars{font-size:44px}
+ body .stage{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:16px;align-items:stretch}
+ body .focus{min-height:calc(100vh - 86px)}
+ body .side{display:flex;flex-direction:column;justify-content:space-between;margin:0}
+ body .side .ctrl{flex-direction:column;align-items:stretch}
+ body .side .mjbar{flex-direction:column-reverse;align-items:center;margin:0}
+ body .side .mjbar svg{width:120px;height:auto}
+ body .side .bubble{margin:0 0 12px;text-align:center}
+ body .side .bubble:before{left:50%;bottom:-22px;margin-left:-10px;border:11px solid transparent;border-top:13px solid #fff}
+ body .sgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:26px}
+ body .sl .pic{max-height:calc(100vh - 140px);width:100%;object-fit:contain}
+ body .sent{font-size:min(7vw,14vh);text-align:left}
  .hero{margin:0 0 14px}.hero svg{width:140px;height:auto}
  .grid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
 }
 @media (orientation:portrait) and (min-width:700px){
  .word{font-size:min(26vw,22vh)}.mean{font-size:min(13vw,9vh)}.pic{max-height:34vh}.sent{font-size:min(9vw,7vh)}
- .ox button{min-width:260px;min-height:96px;font-size:34px}
+ body .focus{min-height:52vh}
 }
+.focus{display:flex;flex-direction:column;justify-content:center}
+.sgrid{display:grid;gap:14px;align-items:center}
+.side{margin-top:14px}
+.side .ctrl{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+.side button{font-size:19px;min-height:50px;padding:6px 14px;border-radius:18px;box-shadow:0 4px 0 rgba(0,0,0,.16)}
+.side .b-ghost{box-shadow:none;font-size:16px;min-height:40px}
+.side .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.side .oxb{font-size:20px;min-height:62px;padding:4px 6px}
+.side .go{font-size:21px;min-height:58px}
+.side .hint{font-size:14px;margin:0;line-height:1.3}
+.microw{display:flex;align-items:center;justify-content:center;gap:10px}
+.side .mic{width:84px;height:84px;flex:none}.miclbl{font-size:18px;line-height:1.2}
+.side .result{margin:0;min-height:0;font-size:17px}.side .stars{font-size:32px}.side .score{font-size:22px}.side .heard{font-size:14px;line-height:1.3}
+.side .microw .ox{display:grid;grid-template-columns:1fr 1fr;gap:8px}.side .microw .ox button{min-width:0;font-size:17px;min-height:52px}
+.score{font-size:30px}
 .fs{position:fixed;right:14px;bottom:14px;z-index:40;min-height:48px;font-size:16px;opacity:.85}
 @media(max-width:600px){.hero{grid-template-columns:1fr}.hero svg{width:120px;height:auto}.ox button{min-width:140px;font-size:24px}.mjbar svg{width:90px;height:auto}
  .adm table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:6.5em;margin-inline-start:-7em;color:var(--muted)}.stack td:empty{display:none}}
@@ -364,15 +380,18 @@ function bindQuit(){$('#quit').onclick=()=>{stopAll();finish(true)};app.querySel
 
 function wordStep(){
   stopAll();keepResume('word');const {u,w}=cur();const r=ses.res[ses.i];const long=w.word.length>7;
-  app.innerHTML=header()+`<div class="stage"><div class="card">
+  const ctrl=r.m===null
+   ?`<div class="two"><button class="b-yellow" id="hear">단어 소리</button><button class="b-white" id="peek">뜻 보기</button></div>
+     <div class="two"><button class="b-green oxb" id="o">O 맞았어요</button><button class="b-coral oxb" id="x">X 몰랐어요</button></div>
+     <p class="hint">아이가 뜻을 말하면 엄마·아빠가 눌러 주세요</p>`
+   :`<button class="b-yellow" id="hear">단어 소리 듣기</button><button class="b-green go" id="toS">예문 보러 가기 →</button><button class="b-ghost" id="redo">뜻 다시 판정하기</button>`;
+  app.innerHTML=header()+`<div class="stage"><div class="card focus">
    <div class="word en ${long?'long':''}">${esc(w.word)}</div>
    <div class="mean ${r.m===null?'hide':''} ${w.meaning.length>6?'small':''}" id="mean">${esc(w.meaning)}</div>
-   <div class="row"><button class="b-yellow" id="hear">단어 소리 듣기</button>${r.m===null?'<button class="b-white" id="peek">뜻 살짝 보기</button>':''}</div>
-   <div id="act" style="margin-top:16px">${r.m===null?`<div class="ox"><button class="b-green" id="o">O 맞았어요</button><button class="b-coral" id="x">X 몰랐어요</button></div><p class="hint">아이가 뜻을 말하면 엄마·아빠가 눌러 주세요</p>`:nextWordBtn()}</div>
-   <div class="row" style="justify-content:space-between;margin-top:18px">${ses.i>0?'<button class="b-white" id="prev">← 이전 단어</button>':'<span></span>'}${r.m!==null?'<button class="b-ghost" id="redo">뜻 다시 판정하기</button>':''}</div>
-  </div>${say(r.m===null?'think':r.m?'cheer':'hug',r.m===null?'이 단어는 무슨 뜻일까? 소리 내어 말해 봐!':r.m?'딩동댕! 정말 잘했어!':`괜찮아! <b>${esc(w.word)}</b>는 <b>${esc(w.meaning)}</b>(이)야. 같이 외워 보자!`)}</div>`;
+  </div><aside class="side"><div class="ctrl">${ctrl}${ses.i>0?'<button class="b-white" id="prev">← 이전 단어</button>':''}</div>
+  ${say(r.m===null?'think':r.m?'cheer':'hug',r.m===null?'이 단어는 무슨 뜻일까? 소리 내어 말해 봐!':r.m?'딩동댕! 정말 잘했어!':`괜찮아! <b>${esc(w.word)}</b>는 <b>${esc(w.meaning)}</b>(이)야. 같이 외워 보자!`)}</aside></div>`;
   bindQuit();$('#hear').onclick=()=>speak(w.word,0.75);
-  if($('#peek'))$('#peek').onclick=()=>{$('#mean').classList.remove('hide');$('#peek').remove()};
+  if($('#peek'))$('#peek').onclick=()=>{$('#mean').classList.remove('hide');$('#peek').disabled=true};
   if(r.m===null){$('#o').onclick=()=>answerM(true);$('#x').onclick=()=>answerM(false)}else bindNextWord();
   if($('#prev'))$('#prev').onclick=()=>goTo(ses.i-1,'sent');
   if($('#redo'))$('#redo').onclick=()=>{r.m=null;wordStep()};
@@ -387,14 +406,15 @@ function answerM(ok){
 
 function sentStep(){
   stopAll();keepResume('sent');const {u,w}=cur();const r=ses.res[ses.i];const toks=w.sentence.split(/\s+/);
-  app.innerHTML=header()+`<div class="stage"><div class="card">
-   <div class="sgrid">${w.img?`<div class="sl"><img class="pic" src="${esc(w.img)}" alt=""></div>`:''}<div class="sr">
-   <div class="sent en" id="sent">${toks.map((t,i)=>`<span data-i="${i}">${esc(t)}</span>`).join(' ')}</div>
-   <div class="row"><button class="b-yellow big" id="play">미국 발음 듣기</button><button class="b-white" id="slow">천천히 듣기</button></div>
-   <div class="row" id="microw"></div>
+  app.innerHTML=header()+`<div class="stage"><div class="card focus">
+   <div class="sgrid">${w.img?`<div class="sl"><img class="pic" src="${esc(w.img)}" alt=""></div>`:''}
+   <div class="sent en" id="sent">${toks.map((t,i)=>`<span data-i="${i}">${esc(t)}</span>`).join(' ')}</div></div>
+  </div><aside class="side"><div class="ctrl">
+   <div class="two"><button class="b-yellow" id="play">미국 발음</button><button class="b-white" id="slow">천천히</button></div>
+   <div class="microw" id="microw"></div>
    <div class="result" id="res">${r.s!==null?resultHtml(r.best,r.s,''):''}</div>
-   <div class="row"><button class="b-white" id="toW">← 단어로 돌아가기</button><button class="b-green big" id="next">${ses.i<ses.items.length-1?'다음 단어 →':'결과 보기 →'}</button></div>
-  </div></div></div>${say('happy','잘 듣고, 마이크 버튼을 누른 다음 문장을 따라 말해 봐!')}</div>`;
+   <div class="two"><button class="b-white" id="toW">← 단어로</button><button class="b-green" id="next">${ses.i<ses.items.length-1?'다음 →':'결과 →'}</button></div>
+  </div>${say('happy','잘 듣고, 마이크를 누르고 따라 말해 봐!')}</aside></div>`;
   bindQuit();
   $('#play').onclick=()=>speak(w.sentence);$('#slow').onclick=()=>speak(w.sentence,0.55);
   $('#toW').onclick=()=>wordStep();
@@ -404,7 +424,7 @@ function sentStep(){
 function refreshMic(){
   const row=$('#microw');if(!row||!ses)return;
   if(micMode==='native'||micMode==='dict'||micMode==='wait'){
-    row.innerHTML=`<button class="mic" id="mic" aria-label="말하기" ${micMode==='wait'?'disabled':''}><svg width="44" height="44" viewBox="0 0 24 24" fill="#fff"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0" stroke="#fff" stroke-width="2" fill="none"/><path d="M12 18v4M8 22h8" stroke="#fff" stroke-width="2"/></svg></button><div style="font-size:24px">눌러서 말하기</div>`;
+    row.innerHTML=`<button class="mic" id="mic" aria-label="말하기" ${micMode==='wait'?'disabled':''}><svg width="44" height="44" viewBox="0 0 24 24" fill="#fff"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0" stroke="#fff" stroke-width="2" fill="none"/><path d="M12 18v4M8 22h8" stroke="#fff" stroke-width="2"/></svg></button><div class="miclbl">눌러서<br>말하기</div>`;
     $('#mic').onclick=doListen;
   }else manualRow(row,'이 브라우저는 마이크 판정을 할 수 없어요. 크롬이나 엣지에서 열면 마이크로 판정해요.');
 }
@@ -431,7 +451,7 @@ function doListen(){
   });
 }
 function resultHtml(pct,pass,heard){
-  return `${starsHtml(starN(pct))}<div style="font-size:30px">${pass?'통과! ':'조금만 더! '}${pct}점</div>${heard?`<div class="heard">MJ선생님이 들은 말: <span class="en">${esc(heard)}</span></div>`:''}`;
+  return `${starsHtml(starN(pct))}<div class="score">${pass?'통과! ':'조금만 더! '}${pct}점</div>${heard?`<div class="heard">MJ선생님이 들은 말: <span class="en">${esc(heard)}</span></div>`:''}`;
 }
 function showRes(pct,pass,heard){
   $('#res').innerHTML=resultHtml(pct,pass,heard);
