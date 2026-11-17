@@ -141,12 +141,12 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 .side .result{margin:0;min-height:0;font-size:17px}.side .stars{font-size:32px}.side .score{font-size:22px}.side .heard{font-size:14px;line-height:1.3}
 .side .microw .ox{display:grid;grid-template-columns:1fr 1fr;gap:8px}.side .microw .ox button{min-width:0;font-size:17px;min-height:52px}
 .score{font-size:30px}
-.tf{display:grid;gap:clamp(14px,3vh,30px);width:100%;text-align:center}
+.tf{display:grid;gap:clamp(24px,5vh,52px);width:100%;text-align:center}
 .tftitle{font-size:clamp(28px,4.5vh,44px);color:var(--coral)}
 .formula{font-size:clamp(46px,min(7vw,11vh),110px);line-height:1.1;white-space:nowrap}
-.formula .plus{color:#9AA8BC;font-size:.7em}.tail{color:#FF6B6B}.formula .tail{background:#FFF0D6;border-radius:14px;padding:0 .12em}
+.formula .plus{color:#9AA8BC;font-size:.7em}.tail{color:#FF6B6B}.formula .tail{display:inline-block;line-height:1;background:#FFF0D6;border-radius:12px;padding:.02em .1em .1em}
 .formula s.gone{color:#C3CCD8;text-decoration-thickness:4px}
-.tfex{font-size:clamp(20px,min(2.5vw,4.2vh),32px);line-height:1.5;margin-top:6px}.tfex small{font-size:.85em;color:var(--muted)}
+.tfex{font-size:clamp(20px,min(2.5vw,4.2vh),32px);line-height:1.5;margin-top:clamp(10px,2vh,20px)}.tfex small{font-size:.85em;color:var(--muted)}
 .sent u.tl{text-decoration:none;color:#FF6B6B}
 .fs{position:fixed;right:14px;bottom:14px;z-index:40;min-height:48px;font-size:16px;opacity:.85}
 @media(max-width:600px){.hero{grid-template-columns:1fr}.hero svg{width:120px;height:auto}.ox button{min-width:140px;font-size:24px}.mjbar svg{width:90px;height:auto}
@@ -161,7 +161,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
-const APP_VER='2026.11.17-11';
+const APP_VER='2026.11.17-12';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
