@@ -199,7 +199,7 @@ const say=(mood,html,w=130)=>`<div class="mjbar">${mj(mood,w)}<div class="bubble
 /* ---------- 소리 ---------- */
 let AC=null;
 function sfx(type){
-  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const t=AC.currentTime;
     const seq={ok:[[784,0],[1047,.12]],no:[[330,0],[262,.16]],pop:[[660,0]],fan:[[523,0],[659,.12],[784,.24],[1047,.36],[1319,.5]]}[type]||[];
     seq.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type==='no'?'triangle':'sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(.25,t+d+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d+.3);o.connect(g).connect(AC.destination);o.start(t+d);o.stop(t+d+.32)})}catch(e){}
 }
@@ -221,7 +221,17 @@ function pickVoice(){
   return us[0]||voices.find(v=>/^en/i.test(v.lang))||null;
 }
 function speak(text,rate){
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';const v=pickVoice();if(v)u.voice=v;u.rate=rate||S.settings.rate;u.pitch=1.05;speechSynthesis.speak(u)}catch(e){toastMsg('이 브라우저에서는 소리를 낼 수 없어요.')}
+  /* 안드로이드 크롬: cancel() 직후 바로 speak()하면 소리가 씹히는 문제가 있어 잠깐 쉬었다가 말함 */
+  let ss;try{ss=window.speechSynthesis}catch(e){}
+  if(!ss){toastMsg('이 브라우저에서는 소리를 낼 수 없어요.');return}
+  if(!voices.length)loadVoices();
+  const go=(useVoice)=>{try{
+    const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||S.settings.rate;u.pitch=1.05;u.volume=1;
+    const v=useVoice?pickVoice():null;if(v)u.voice=v;
+    u.onerror=e=>{if(useVoice&&e.error!=='interrupted'&&e.error!=='canceled')go(false)};
+    ss.resume&&ss.resume();ss.speak(u);
+  }catch(e){}};
+  if(ss.speaking||ss.pending){ss.cancel();setTimeout(()=>go(true),150)}else go(true);
 }
 
 /* ---------- 마이크 (음성 인식) ---------- */
