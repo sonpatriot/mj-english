@@ -153,6 +153,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
+const APP_VER='2026.11.17-4';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
@@ -316,7 +317,7 @@ function home(){
   <div class="grid">${us.map(u=>{const n=u.words.length,done=u.words.filter(w=>peek(u.id,w)?.done).length,wr=wrongIn(u).length,stars=u.words.reduce((a,w)=>a+starN(peek(u.id,w)?.best||0),0);
     return `<button class="ucard" data-u="${esc(u.id)}">${u.cover?`<img src="${esc(u.cover)}" alt="">`:''}<div class="t en">${esc(u.title)}</div><div class="k">${esc(u.titleKo||'')} · 단어 ${n}개</div>
     <div class="bar"><i style="width:${Math.round(done/n*100)}%"></i></div><div>${done===n&&!wr?'<span class="badge g">다 했어요!</span> ':''}${wr?`<span class="badge">틀린 것 ${wr}</span> `:''}<span class="k">★ ${stars} / ${n*3}</span></div></button>`}).join('')}</div>
-  <div class="row" style="justify-content:flex-end;margin-top:26px">${document.fullscreenEnabled&&!document.fullscreenElement?'<button class="b-white" id="fsb">전체 화면으로 보기</button>':''}<button class="b-ghost" id="adm">관리자</button></div>`;
+  <div class="row" style="justify-content:flex-end;margin-top:26px">${document.fullscreenEnabled&&!document.fullscreenElement?'<button class="b-white" id="fsb">전체 화면으로 보기</button>':''}<button class="b-ghost" id="adm">관리자 · v${APP_VER}</button></div>`;
   if($('#fsb'))$('#fsb').onclick=()=>{document.documentElement.requestFullscreen().then(()=>{$('#fsb')&&$('#fsb').remove()}).catch(()=>{})};
   app.querySelectorAll('.ucard').forEach(b=>b.onclick=()=>{sfx('pop');unitHome(b.dataset.u)});
   $('#adm').onclick=askPin;
@@ -577,7 +578,7 @@ function admSet(p){
   <div class="row" style="justify-content:flex-start"><button class="b-yellow" id="tv">목소리 들어 보기</button></div>
   <label for="pn">관리자 비밀번호 (숫자 4자리)</label><input id="pn" inputmode="numeric" maxlength="4" value="${esc(s.pin)}">
   <div class="row" style="justify-content:flex-start"><button class="b-green" id="ss">설정 저장</button></div>
-  <p class="hint" style="text-align:left">마이크 판정: ${micMode==='native'?'이 브라우저의 음성 인식 사용 중':micMode==='dict'?'Claude 받아쓰기 사용 중':'사용할 수 없음 → 엄마·아빠 O/X 판정으로 바뀌어요'}</p></div>
+  <p class="hint" style="text-align:left">앱 버전: ${APP_VER}<br>마이크 판정: ${micMode==='native'?'이 브라우저의 음성 인식 사용 중':micMode==='dict'?'Claude 받아쓰기 사용 중':'사용할 수 없음 → 엄마·아빠 O/X 판정으로 바뀌어요'}</p></div>
   <div class="box"><h3 style="margin-top:0">백업</h3><p class="note">학습 기록은 이 브라우저에만 저장돼요. 다른 기기로 옮길 때 아래 글자를 복사해서 그 기기의 '가져오기' 칸에 붙여 넣으세요.</p>
   <textarea id="bk" rows="4" readonly>${esc(JSON.stringify(S))}</textarea><div class="row" style="justify-content:flex-start"><button class="b-white" id="cp">복사하기</button></div>
   <label for="im">가져오기</label><textarea id="im" rows="3" placeholder="백업 글자를 붙여 넣으세요"></textarea><div class="row" style="justify-content:flex-start"><button class="b-white" id="ip">가져오기</button><button class="b-coral" id="ra">모든 학습 기록 지우기</button></div></div>`;
@@ -592,7 +593,11 @@ function admSet(p){
 function confirmBox(msg,yes){const d=document.createElement('div');d.className='modal';d.innerHTML=`<div class="card"><p style="font-size:20px">${esc(msg)}</p><div class="row"><button class="b-coral" id="cy">네</button><button class="b-white" id="cn">아니요</button></div></div>`;document.body.appendChild(d);d.querySelector('#cy').onclick=()=>{d.remove();yes()};d.querySelector('#cn').onclick=()=>d.remove()}
 
 /* 설치형 웹앱: 인터넷 주소(https)로 열었을 때만 오프라인 저장 켜기 */
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!window.claude){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!window.claude){
+  const hadCtl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update().catch(()=>{})})}).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadCtl&&!window.__mjReload&&!ses){window.__mjReload=1;location.reload()}});
+}
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
 if(!(window.MJ_UNITS||[]).length&&!S.custom.length)app.innerHTML='<div class="card"><p style="font-size:22px">단원 데이터(mjdata/units.js)를 찾지 못했어요. HTML 파일과 mjdata 폴더가 같은 곳에 있는지 확인해 주세요.</p></div>';
 else home();
