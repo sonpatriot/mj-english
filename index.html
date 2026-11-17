@@ -167,7 +167,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
-const APP_VER='2026.11.17-14';
+const APP_VER='2026.11.17-15';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
@@ -489,6 +489,7 @@ function answerM(ok){
 function transforms(u,st){
   const out=[],seen=new Set(),toks=st.text.split(/\s+/).map(t=>t.toLowerCase().replace(/[^a-z']/g,''));
   for(const idx of sentWords(u,st.text)){const w=u.words[idx],base=w.word.toLowerCase();if(seen.has(idx)||base.includes(' '))continue;
+    if(ALWAYS_S[base]&&toks.includes(base)){seen.add(idx);out.push({w,base,form:base,kind:'always',verb:false});continue}
     const t=toks.find(t=>t!==base&&lemmaHit(t,base));if(!t)continue;seen.add(idx);
     let kind='s';if(t.endsWith('ing'))kind=base.endsWith('e')&&t===base.slice(0,-1)+'ing'?'ing-e':t===base+base.slice(-1)+'ing'?'ing-double':'ing';
     else if(t.endsWith('ed'))kind='ed';else if(t===base.replace(/y$/,'ies'))kind='ies';else if(t===base+'es')kind='es';
@@ -496,7 +497,9 @@ function transforms(u,st){
     out.push({w,base,form:t,kind,verb});}
   return out;
 }
+const ALWAYS_S={scissors:'✂️ 가위는 칼날이 <b>두 개</b>라서 처음부터 꼬리 <b class="tail">s</b>를 달고 태어났어요!',clothes:'👕👖 옷은 여러 벌을 한꺼번에 말해서 처음부터 꼬리 <b class="tail">s</b>가 붙어 있어요!',glasses:'👓 안경은 알이 <b>두 개</b>라서 처음부터 꼬리 <b class="tail">s</b>가 있어요!',pants:'👖 바지는 다리가 <b>두 개</b>라서 처음부터 꼬리 <b class="tail">s</b>가 있어요!',shoes:'👟👟 신발은 두 짝이라 보통 꼬리 <b class="tail">s</b>를 붙여 말해요!'};
 function tfFormula(x){
+  if(x.kind==='always')return `<span>${esc(x.base.slice(0,-1))}<span class="tail">s</span></span>`;
   let k=0;while(k<x.base.length&&x.base[k]===x.form[k])k++;
   const keep=x.form.slice(0,k),tail=x.form.slice(k);
   const left=x.kind==='ing-e'?`${esc(x.base.slice(0,-1))}<s class="gone">e</s>`:x.kind==='ies'?`${esc(x.base.slice(0,-1))}<s class="gone">y</s>`:esc(x.base);
@@ -504,6 +507,7 @@ function tfFormula(x){
 }
 const EMO={sun:'☀️',shine:'✨',snow:'❄️',melt:'💧',bird:'🐦',sing:'🎵',flower:'🌸',bud:'🌱',wind:'🌬️',blow:'💨',chick:'🐥',peep:'🐣',spring:'🌷',paper:'📄',scissors:'✂️',ribbon:'🎀',glue:'🧴',sticker:'⭐',crayon:'🖍️',birthday:'🎂',card:'💌',bubble:'🫧',beach:'🏖️',bath:'🛁',sink:'🚰',drink:'🥤',clothes:'👕',dog:'🐶',cat:'🐱',apple:'🍎',ball:'⚽',car:'🚗',book:'📘',run:'🏃',jump:'🤸',swim:'🏊',eat:'😋',play:'🎈',read:'📖'};
 function tfText(x){
+  if(x.kind==='always')return `<b class="en">${esc(x.base)}</b> = ${esc(x.w.meaning.split(',')[0].trim())}<br>${ALWAYS_S[x.base]}`;
   const m=x.w.meaning.split(',')[0].trim(),stem=m.replace(/다$/,''),B=`<b class="en">${esc(x.base)}</b>`,F=`<b class="en">${esc(x.form)}</b>`,E=x.w.emoji||EMO[x.base]||(x.verb?'🌟':'🎁');
   if(x.kind.startsWith('ing')){
     let t=`${E} ${B}(${esc(m)}) + <b class="tail">ing</b> = ${F}<br>⏰ <b>"지금 ${esc(stem)}고 있어요!"</b>`;
@@ -524,16 +528,16 @@ function fitTf(){
 }
 window.addEventListener('resize',()=>{if(document.querySelector('.tf'))fitTf()});
 function tipStep(tf){
-  stopAll();const {st}=cur();const r=ses.res[ses.i];
-  const ing=tf.some(x=>x.kind.startsWith('ing')),pl=tf.some(x=>!x.verb&&!x.kind.startsWith('ing'));
+  stopAll();const {st}=cur();const r=ses.res[ses.i];ses.tfShown=ses.tfShown||{};tf.forEach(x=>ses.tfShown[x.form]=1);
+  const ing=tf.some(x=>x.kind.startsWith('ing')),pl=tf.some(x=>!x.verb&&!x.kind.startsWith('ing')&&x.kind!=='always'),al=tf.every(x=>x.kind==='always');
   app.innerHTML=header()+`<div class="stage"><div class="card focus"><div class="tf">
-   <div class="tftitle">✨ 단어가 변신했어요! ✨</div>
+   <div class="tftitle">${al?'✨ 처음부터 꼬리 s가 있는 단어! ✨':'✨ 단어가 변신했어요! ✨'}</div>
    ${tf.map(x=>`<div class="tfrow"><div class="formula en">${tfFormula(x)}</div><div class="tfex">${tfText(x)}</div></div>`).join('')}
   </div></div><aside class="side"><div class="ctrl">
    <button class="b-yellow" id="tfhear">변신 소리 듣기</button>
    <button class="b-green go" id="tfgo">${nextLabel()}</button>
    <button class="b-white" id="back2">← 문장으로</button>
-  </div>${say('wow',ing&&pl?'방금 문장에서 단어들이 꼬리를 달고 변신했어!':ing?'방금 문장에서 단어가 <b>ing</b> 꼬리를 달고 변신했어!':'방금 문장에서 여러 개라서 꼬리가 생겼어!')}</aside></div>`;
+  </div>${say('wow',al?'이 단어는 처음부터 꼬리가 달려 있대! 신기하지?':ing&&pl?'방금 문장에서 단어들이 꼬리를 달고 변신했어!':ing?'방금 문장에서 단어가 <b>ing</b> 꼬리를 달고 변신했어!':'방금 문장에서 여러 개라서 꼬리가 생겼어!')}</aside></div>`;
   bindQuit();
   fitTf();
   $('#tfhear').onclick=()=>speak(tf.map(x=>x.base+'. '+x.form+'.').join(' '),0.75);
@@ -559,7 +563,9 @@ function sentStep(){
   bindQuit();
   $('#play').onclick=()=>speak(st.text);$('#slow').onclick=()=>speak(st.text,0.55);
   $('#prev').onclick=()=>goTo(ses.i-1);
-  $('#nx').onclick=()=>{if(tf.length&&!r.tipSeen){commitIfAnswered();tipStep(tf)}else nextStep()};
+  ses.tfShown=ses.tfShown||{};
+  const fresh=tf.filter(x=>!ses.tfShown[x.form]);
+  $('#nx').onclick=()=>{if(fresh.length&&!r.tipSeen){commitIfAnswered();tipStep(tf)}else nextStep()};
   refreshMic();fitSent();setTimeout(()=>speak(st.text),350);
 }
 /* 문장 글자를 카드 안에서 가능한 한 크게 */
