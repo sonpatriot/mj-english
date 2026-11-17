@@ -154,7 +154,8 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 .formula s.gone{color:#C3CCD8;text-decoration-thickness:4px}
 .tfex{font-size:1em;line-height:1.45;margin-top:.3em}.tfex .tnote{color:#5D6B82}
 .sent u.tl{text-decoration:none;color:#FF6B6B}
-.fs{position:fixed;right:14px;bottom:14px;z-index:40;min-height:48px;font-size:16px;opacity:.85}
+.fsb{position:fixed;left:12px;bottom:12px;z-index:45;display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 14px;border-radius:22px;font:16px "Jua",sans-serif;color:var(--ink);background:rgba(255,255,255,.88);box-shadow:0 3px 0 rgba(0,0,0,.14);opacity:.9}
+.fsb:hover{opacity:1}
 @media(max-width:600px){.hero{grid-template-columns:1fr}.hero svg{width:120px;height:auto}.ox button{min-width:140px;font-size:24px}.mjbar svg{width:90px;height:auto}
  .adm table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:6.5em;margin-inline-start:-7em;color:var(--muted)}.stack td:empty{display:none}}
 </style>
@@ -167,7 +168,7 @@ body{-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscrol
 <script>
 {
 /* ---------- 저장 ---------- */
-const APP_VER='2026.11.17-16';
+const APP_VER='2026.11.17-17';
 const KEY='mjEnglishReview.v1';
 const DEF={settings:{name:'예준',pin:'1234',pass:70,rate:0.85,voice:''},words:{},sessions:[],custom:[],hidden:[],over:{},resume:{}};
 let S;
@@ -373,8 +374,8 @@ function home(){
   <div class="grid">${us.map(u=>{const n=u.words.length,done=u.words.filter(w=>peek(u.id,w)?.done).length,wr=wrongIn(u).length,stars=u.words.reduce((a,w)=>a+starN(peek(u.id,w)?.best||0),0);
     return `<button class="ucard" data-u="${esc(u.id)}">${u.cover?`<img src="${esc(u.cover)}" alt="">`:''}<div class="t en">${esc(u.title)}</div><div class="k">${esc(u.titleKo||'')} · 단어 ${n}개</div>
     <div class="bar"><i style="width:${Math.round(done/n*100)}%"></i></div><div>${done===n&&!wr?'<span class="badge g">다 했어요!</span> ':''}${wr?`<span class="badge">틀린 것 ${wr}</span> `:''}<span class="k">★ ${stars} / ${n*3}</span>${S.best&&S.best[u.id]!=null?` <span class="badge g">최고 ${S.best[u.id]}점</span>`:''}</div></button>`}).join('')}</div>
-  <div class="row" style="justify-content:flex-end;margin-top:26px">${document.fullscreenEnabled&&!document.fullscreenElement?'<button class="b-white" id="fsb">전체 화면으로 보기</button>':''}<button class="b-ghost" id="adm">관리자 · v${APP_VER}</button></div>`;
-  if($('#fsb'))$('#fsb').onclick=()=>{document.documentElement.requestFullscreen().then(()=>{$('#fsb')&&$('#fsb').remove()}).catch(()=>{})};
+  <div class="row" style="justify-content:flex-end;margin-top:26px"><button class="b-ghost" id="adm">관리자 · v${APP_VER}</button></div>`;
+
   app.querySelectorAll('.ucard').forEach(b=>b.onclick=()=>{sfx('pop');unitHome(b.dataset.u)});
   $('#adm').onclick=askPin;
   if(totalWrong)$('#allWrong').onclick=()=>{const items=[];us.forEach(u=>wrongIn(u).forEach(w=>items.push({u:u.id,i:w.idx})));start(null,'review',items)};
@@ -780,6 +781,21 @@ function resetUnit(id){
 }
 function confirmBox(msg,yes){const d=document.createElement('div');d.className='modal';d.innerHTML=`<div class="card"><p style="font-size:20px;white-space:pre-line">${esc(msg)}</p><div class="row"><button class="b-coral" id="cy">네</button><button class="b-white" id="cn">아니요</button></div></div>`;document.body.appendChild(d);d.querySelector('#cy').onclick=()=>{d.remove();yes()};d.querySelector('#cn').onclick=()=>d.remove()}
 
+/* 모든 화면 공통: 전체 화면 켜기/끄기 버튼 */
+{
+  const de=document.documentElement;
+  const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+  const canFs=!!(de.requestFullscreen||de.webkitRequestFullscreen);
+  if(canFs){
+    const b=document.createElement('button');b.id='fsToggle';b.className='fsb';b.type='button';
+    const icoOn='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+    const icoOff='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+    const paint=()=>{b.innerHTML=isFs()?icoOff+'<span>전체 화면 끄기</span>':icoOn+'<span>전체 화면</span>';b.setAttribute('aria-pressed',isFs())};
+    b.onclick=()=>{try{if(isFs()){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}else{const r=(de.requestFullscreen||de.webkitRequestFullscreen).call(de);if(r&&r.catch)r.catch(()=>toastMsg('이 화면에서는 전체 화면을 쓸 수 없어요.'))}}catch(e){}};
+    document.addEventListener('fullscreenchange',paint);document.addEventListener('webkitfullscreenchange',paint);
+    paint();document.body.appendChild(b);
+  }
+}
 /* 설치형 웹앱: 인터넷 주소(https)로 열었을 때만 오프라인 저장 켜기 */
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!window.claude){
   const hadCtl=!!navigator.serviceWorker.controller;
